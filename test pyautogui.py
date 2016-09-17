@@ -50,4 +50,4 @@ def screenshot():
 ##
 ##def wait():
 ##    return (int(time.time()) - now) < 6
-
+#asdf 
