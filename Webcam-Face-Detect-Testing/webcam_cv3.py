@@ -59,6 +59,7 @@ eyesy = 0
 eyesw = 0
 eyesh = 0
 frame = None
+didJustScreenOff = False
 
 def headIsAtLocation(string):
     return headLocation( facex, facey) == string
@@ -99,6 +100,7 @@ def frameCapture():
     global eyesy
     global eyesw
     global eyesh
+    global didJustScreenOff
     
     faceCascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
     eyeCascade = cv2.CascadeClassifier('haarcascade_eye.xml')
@@ -125,6 +127,19 @@ def frameCapture():
 
         faceh = 0
         facew = 0
+
+        if (not didJustScreenOff and len(faces) == 0):
+            test_pyautogui.screenOff()
+            didJustScreenOff = True
+        elif (didJustScreenOff and len(faces) != 0):
+            test_pyautogui.screenOn()
+            didJustScreenOff = False
+            captureCount = 0
+            avgx = 0
+            avgy = 0
+            avgh = 0
+            avgw = 0
+        
 
         for (x, y, w, h) in faces:
             if (w * h > faceh * facew):
