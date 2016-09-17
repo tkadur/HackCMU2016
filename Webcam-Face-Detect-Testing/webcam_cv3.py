@@ -35,6 +35,42 @@ def headLocation( facex, facey):
     elif (facey - avgy < -30): return "top"
     elif (facey - avgy < -15): return "midtop"
     else: return "neutral"
+
+def rectangeColorAvg(fr):
+    ttlB = 0
+    ttlG = 0
+    ttlR = 0
+    pxlCounter = 0
+    width = len(fr[0])
+    height = len(fr)
+    
+    #if((boxx + boxw) >= width): return [0,0,0]
+    #if((boxy + boxh) >= height): return [0,0,0]
+
+    '''
+    print( "test", end = ' [')
+    print( boxx, end = ', ')
+    print( boxy, end = ', ')
+    print( boxw, end = ', ')
+    print( boxh, end = '] ')
+    print('')
+    '''
+    for y in range(0,height,2):
+        for x in range(0,width,2):
+            px = fr[y][x]
+            ttlB += px[0]
+            ttlG += px[1]
+            ttlR += px[2]
+            pxlCounter += 1
+
+    if(pxlCounter == 0):
+        return [0,0,0]
+
+    avgB = roundHalfUp(ttlB /pxlCounter)
+    avgG = roundHalfUp(ttlG /pxlCounter)
+    avgR = roundHalfUp(ttlR /pxlCounter)
+    return [avgB, avgG,avgR]
+        
     
 
 
@@ -58,7 +94,16 @@ eyesx = 0
 eyesy = 0
 eyesw = 0
 eyesh = 0
-frame = None
+mouthx = 0
+mouthy = 0
+mouthw = 0
+mouthh = 0
+eye1Color = [0,0,0]
+totalEye1Color = [0,0,0]
+avgEye1Color = [0,0,0]
+eye1 = [0, 0, 0, 0]
+eye2 = [0, 0, 0, 0]
+eye1Dif = [0, 0, 0]
 faces = None
 didJustScreenOff = False
 
@@ -101,9 +146,18 @@ def frameCapture():
     global eyesy
     global eyesw
     global eyesh
+    global eye1Color
+    global totalEye1Color
+    global avgEye1Color
+    global mouthx
+    global mouthy
+    global mouthw
+    global mouthh
     global didJustScreenOff
     global faces
-    global frame
+    global eye1
+    global eye2
+    global eye1Dif
     
     faceCascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
     eyeCascade = cv2.CascadeClassifier('haarcascade_eye.xml')
@@ -114,6 +168,11 @@ def frameCapture():
     #faceCascade = cv2.CascadeClassifier(cascPath)
     log.basicConfig(filename='webcam.log',level=log.INFO)
     video_capture = cv2.VideoCapture(0)
+
+
+
+
+    #Start Main Loop
     while True:
         # Capture frame-by-frame
         ret, frame = video_capture.read()
@@ -128,11 +187,12 @@ def frameCapture():
             # flags=cv2.cv.CV_HAAR_SCALE_IMAGE
         )
 
+    
         faceh = 0
         facew = 0
 
         for (x, y, w, h) in faces:
-            print(w * h)
+            #print(w * h)
             if (w * h > faceh * facew):
                 facex = x
                 facey = y
@@ -144,12 +204,20 @@ def frameCapture():
 
         if (faceh == 0):
             faceh = 1
+
         
         # EYES detection
         eyes_gray = gray[facey:facey+faceh, facex:facex+facew]
         eyes_color = frame[facey:facey+faceh, facex:facex+facew]
         eyes = eyesCascade.detectMultiScale(eyes_gray)
 
+        print("eyes: ", end = ' ')
+        print(eyes)
+        print('')
+
+        eyesw = 0
+        eyesh = 0
+        
         for(x, y, w, h) in eyes:
             if (w > h and w * h > eyesh * eyesw):
             #if (w > eyesw):
@@ -164,26 +232,76 @@ def frameCapture():
 
         if (eyesh == 0):
             eyesh = 1
-
-        newEyes = [[eyesx + int(eyesw / 8.5), eyesy + int(eyesh / 2.85), (eyesw // 4),int(eyesh /2.85)],
-                   [eyesx + int((3 *eyesw) / 4) - (eyesw // 8),eyesy + int(eyesh / 2.85), (eyesw // 4), int(eyesh/2.85)]]
+        eye1 = [eyesx + int(eyesw / 8.5), eyesy + int(eyesh / 2.85), (eyesw // 4),int(eyesh /2.85)]
+        eye2 = [eyesx + int((3 *eyesw) / 4) - (eyesw // 8),eyesy + int(eyesh / 2.85), (eyesw // 4), int(eyesh/2.85)]
+        newEyes = [eye1, eye2]
 
         #newEyes = [[eyesx, eyesy + int(faceh / 7), int(facew / 5), int(faceh / 10)],
 #                   [eyesx + int((3 * facew) / 5), eyesy + int(faceh / 7), int(facew / 5), int(faceh / 10)]]
 
+        '''
+        print("neweyes", end = ' ')
+        print(newEyes)
+        print('')
+        '''
+
         for (x, y, w, h) in newEyes:
+            '''
+            print("neweyes", end = ' ')
+            print(x)
+            print(y)
+            print(w)
+            print(h)
+            print('')
+            '''
             cv2.rectangle(eyes_color, (x, y), (x + w, y + h), (0, 255, 0), 2)
         
+        print( "main", end = ' ')
+        print( eye1, end = ' ')
+        print('')
+        
+
+        eye1Color = rectangeColorAvg(eyes_color)
+        '''
+        print( "cur", end = ' ')
+        print( eye1Color)
+        print( "avg", end = ' ')
+        print (avgEye1Color)
+        '''
+        eye1Dif = [0,0,0]
+        eye1Dif[0] = eye1Color[0] - avgEye1Color[0]
+        eye1Dif[1] = eye1Color[1] - avgEye1Color[1]
+        eye1Dif[2] = eye1Color[2] - avgEye1Color[2]
+        print( "dif", end = ' ')
+        print( eye1Dif)
+        
+        print('')
+
         #cv2.rectangle(eyes_color,(eyesx + (eyesw // 8),eyesy),(eyesx+(eyesw // 4)+(eyesw // 8),eyesy+eyesh),(0,255,0),2)
         #cv2.rectangle(eyes_color,(eyesx + ((3 *eyesw) // 4) - (eyesw // 8),eyesy),(eyesx+eyesw - (eyesw // 8), eyesy+eyesh),(0,255,0),2)
 
         # MOUTH detection
 
-        mouth_gray = gray[facey: facey + faceh, facex: facex + facew]
-        mouth_color = frame[facey: facey + faceh, facex: facex + facew]
+        mouth_gray = gray[facey + int(faceh / 2): facey + faceh, facex: facex + facew]
+        mouth_color = frame[facey + int(faceh / 2): facey + faceh, facex: facex + facew]
         mouth = mouthCascade.detectMultiScale(mouth_gray)
 
+        mouthh = 0
+        mouthw = 0
         
+        for(x, y, w, h) in mouth:
+            if (w * h >mouthh * mouthw):
+                mouthx = x
+                mouthy = y
+                mouthh = h
+                mouthw = w
+
+        if (mouthw == 0):
+            mouthw = 1
+        if (mouthh == 0):
+            mouthh = 1
+        cv2.rectangle(mouth_color, (mouthx, mouthy), (mouthx + mouthw, mouthy + mouthh), (255, 0, 0), 2)
+
 
         
         '''
@@ -202,13 +320,25 @@ def frameCapture():
         
         captureCount += 1
         if (captureCount > constantMinus and captureCount <= constantMinus + 4):
-            print("calibrating")
+            #print("calibrating")
             totalx += facex
             totaly += facey
             avgx = roundHalfUp(totalx / (captureCount - constantMinus))
             avgy = roundHalfUp(totaly / (captureCount - constantMinus))
             avgw = roundHalfUp(totalw / (captureCount - constantMinus))
             avgh = roundHalfUp(totalh / (captureCount - constantMinus))
+
+            totalEye1Color[0] += rectangeColorAvg(eyes_color)[0]
+            totalEye1Color[1] += rectangeColorAvg(eyes_color)[1]
+            totalEye1Color[2] += rectangeColorAvg(eyes_color)[2]
+            
+            print( "eye", end = ' ')    
+            print( totalEye1Color)
+            
+            eye1B = (roundHalfUp(totalEye1Color[0] / (captureCount - constantMinus)))
+            eye1G = (roundHalfUp(totalEye1Color[1] / (captureCount - constantMinus)))
+            eye1R = (roundHalfUp(totalEye1Color[2] / (captureCount - constantMinus)))
+            avgEye1Color = [eye1B, eye1G, eye1R]
 
         """
         print(avgy)
@@ -250,7 +380,7 @@ def frameCapture():
     video_capture.release()
     cv2.destroyAllWindows()
 
-doInThread = False
+doInThread = True
 enableScreenOff = True
 
 if(doInThread):
@@ -279,6 +409,8 @@ if(doInThread):
             if (headIsAtLocation("bottom")):
                     #print("top")
                     test_pyautogui.scroll(-3, -4, headIsAtLocation, ('bottom',))
+            if (abs(eye1Dif[0]) + abs(eye1Dif[1]) + abs(eye1Dif[2]) > 20):
+                    test_pyautogui.screenshot('screen.png')
     else:
         while(True):
             if (not didJustScreenOff and faces != None and len(faces) == 0):
