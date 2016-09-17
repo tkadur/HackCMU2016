@@ -15,7 +15,6 @@ def getBrightness():
 
 
 def getBrightnessLevel(s):
-    print(s)
     return(s.strip().split(' ')[-1])
     '''
     newString=""
@@ -80,6 +79,10 @@ def screenOff():
 def screenOn():
     setBrightness(globalBrightness)
 
+def zoomIn():
+    pyautogui.keyDown('command')
+    pyautogui.press('=')
+    
 #input("Waiting")
 #os.system('say "hello world"')
 #setBrightness(getBrightness())
