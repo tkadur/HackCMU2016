@@ -1,5 +1,6 @@
 import pyautogui
 import time
+import os
 
 def ourSleep(duration, checkFunction, args):
     checkInterval = 0.1
@@ -43,6 +44,13 @@ def rightTab(checkFunction, arg = ()):
 
 def screenshot():
     return pyautogui.screenshot()
+
+def screenOff():
+    os.system('brightness 1')
+
+#input("Waiting")
+#os.system('say "hello world"')
+screenOff()
 
     
 #_thread.start_new_thread(test, ())
