@@ -2,7 +2,7 @@ import pyautogui
 import time
 import os
 import subprocess
-
+from PIL import Image
 
 
 def getBrightness():
@@ -69,9 +69,13 @@ def rightTab(checkFunction, arg = ()):
     smartIntervalExecute(2, 0.75, checkFunction, pyautogui.press, args = arg, args2 = ('right',))
     pyautogui.keyUp('command')
 
-def screenshot():
-    return pyautogui.screenshot()
-
+def screenshot(fileName):
+    #pyautogui.screenshot('test9.png')
+    #im = Image.open('test9.png')
+    pyautogui.screenshot(fileName)
+    im = Image.open(fileName)
+    im.show()
+    
 def screenOff():
     global globalBrightness
     globalBrightness= getBrightness()
@@ -83,13 +87,16 @@ def screenOn():
 def zoomIn():
     pyautogui.keyDown('command')
     pyautogui.press('=')
-    
+    pyautogui.keyUp('command')
+def zoomOut():
+    pyautogui.keyDown('command')
+    pyautogui.press('-')
+    pyautogui.keyUp('command')
 #input("Waiting")
 #os.system('say "hello world"')
 #setBrightness(getBrightness())
     #jalkdsjfkl
 
-    
 #_thread.start_new_thread(test, ())
 
 ##now = int(time.time())
