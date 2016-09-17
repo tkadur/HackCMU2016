@@ -92,7 +92,6 @@ def zoomOut():
 def typing(s):
     pyautogui.typewrite(s,interval=0.1)
 
-screenshot("test.png")
 
 
 #_thread.start_new_thread(test, ())
