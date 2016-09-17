@@ -3,7 +3,7 @@
 # NOTE: this example requires PyAudio because it uses the Microphone class
 
 import speech_recognition as sr
-import threading
+import os
 
 def _recognizeSpeech():
         # obtain audio from the microphone
@@ -23,7 +23,8 @@ def _recognizeSpeech():
         except sr.RequestError as e:
             return -2
 
-def speak():
+def listen():
+        os.system("say \"speak now\"")
         result = _recognizeSpeech()
         if (result == -1):
                 result = ""
@@ -31,7 +32,7 @@ def speak():
                 result = ""
         return result
 
-print(speak())
+print(listen())
 
 '''
 # recognize speech using Sphinx
@@ -46,7 +47,7 @@ except sr.RequestError as e:
 try:
     # for testing purposes, we're just using the default API key
     # to use another API key, use `r.recognize_google(audio, key="GOOGLE_SPEECH_RECOGNITION_API_KEY")`
-    # instead of `r.recognize_google(audio)`
+    # instead of `xxr.recognize_google(audio)`
     print("Google Speech Recognition thinks you said " + r.recognize_google(audio))
 except sr.UnknownValueError:
     print("Google Speech Recognition could not understand audio")
