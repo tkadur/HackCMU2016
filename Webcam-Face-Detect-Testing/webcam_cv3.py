@@ -28,7 +28,7 @@ def keepGoing(position):
     
 
 def headLocation( facex, facey):
-    if (facex - avgx > 45): return "left"
+    if (facex - avgx > 65): return "left"
     elif (facex - avgx < -45): return "right"
     elif (facey - avgy > 35): return "bottom"
     elif (facey - avgy > 15): return "midbottom"
@@ -101,9 +101,13 @@ mouthh = 0
 eye1Color = [0,0,0]
 totalEye1Color = [0,0,0]
 avgEye1Color = [0,0,0]
+eye2Color = [0,0,0]
+totalEye2Color = [0,0,0]
+avgEye2Color = [0,0,0]
 eye1 = [0, 0, 0, 0]
 eye2 = [0, 0, 0, 0]
 eye1Dif = [0, 0, 0]
+eye2Dif = [0, 0, 0]
 faces = None
 didJustScreenOff = False
 
@@ -149,6 +153,9 @@ def frameCapture():
     global eye1Color
     global totalEye1Color
     global avgEye1Color
+    global eye2Color
+    global totalEye2Color
+    global avgEye2Color
     global mouthx
     global mouthy
     global mouthw
@@ -158,6 +165,8 @@ def frameCapture():
     global eye1
     global eye2
     global eye1Dif
+    global eye2Dif
+
     
     faceCascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
     eyeCascade = cv2.CascadeClassifier('haarcascade_eye.xml')
@@ -211,9 +220,11 @@ def frameCapture():
         eyes_color = frame[facey:facey+faceh, facex:facex+facew]
         eyes = eyesCascade.detectMultiScale(eyes_gray)
 
+        '''
         print("eyes: ", end = ' ')
         print(eyes)
         print('')
+        '''
 
         eyesw = 0
         eyesh = 0
@@ -255,13 +266,14 @@ def frameCapture():
             print('')
             '''
             cv2.rectangle(eyes_color, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        
+        '''
         print( "main", end = ' ')
         print( eye1, end = ' ')
         print('')
-        
+        '''
 
         eye1Color = rectangeColorAvg(eyes_color)
+        eye2Color = rectangeColorAvg(eyes_color)
         '''
         print( "cur", end = ' ')
         print( eye1Color)
@@ -272,10 +284,18 @@ def frameCapture():
         eye1Dif[0] = eye1Color[0] - avgEye1Color[0]
         eye1Dif[1] = eye1Color[1] - avgEye1Color[1]
         eye1Dif[2] = eye1Color[2] - avgEye1Color[2]
+
+        eye2Dif = [0,0,0]
+        eye2Dif[0] = eye2Color[0] - avgEye2Color[0]
+        eye2Dif[1] = eye2Color[1] - avgEye2Color[1]
+        eye2Dif[2] = eye2Color[2] - avgEye2Color[2]
+
+        '''
         print( "dif", end = ' ')
         print( eye1Dif)
         
         print('')
+        '''
 
         #cv2.rectangle(eyes_color,(eyesx + (eyesw // 8),eyesy),(eyesx+(eyesw // 4)+(eyesw // 8),eyesy+eyesh),(0,255,0),2)
         #cv2.rectangle(eyes_color,(eyesx + ((3 *eyesw) // 4) - (eyesw // 8),eyesy),(eyesx+eyesw - (eyesw // 8), eyesy+eyesh),(0,255,0),2)
@@ -331,14 +351,24 @@ def frameCapture():
             totalEye1Color[0] += rectangeColorAvg(eyes_color)[0]
             totalEye1Color[1] += rectangeColorAvg(eyes_color)[1]
             totalEye1Color[2] += rectangeColorAvg(eyes_color)[2]
-            
+
+            totalEye2Color[0] += rectangeColorAvg(eyes_color)[0]
+            totalEye2Color[1] += rectangeColorAvg(eyes_color)[1]
+            totalEye2Color[2] += rectangeColorAvg(eyes_color)[2]
+            '''
             print( "eye", end = ' ')    
             print( totalEye1Color)
+            '''
             
             eye1B = (roundHalfUp(totalEye1Color[0] / (captureCount - constantMinus)))
             eye1G = (roundHalfUp(totalEye1Color[1] / (captureCount - constantMinus)))
             eye1R = (roundHalfUp(totalEye1Color[2] / (captureCount - constantMinus)))
             avgEye1Color = [eye1B, eye1G, eye1R]
+
+            eye2B = (roundHalfUp(totalEye1Color[0] / (captureCount - constantMinus)))
+            eye2G = (roundHalfUp(totalEye1Color[1] / (captureCount - constantMinus)))
+            eye2R = (roundHalfUp(totalEye1Color[2] / (captureCount - constantMinus)))
+            avgEye1Color = [eye2B, eye2G, eye2R]
 
         """
         print(avgy)
@@ -383,6 +413,10 @@ def frameCapture():
 doInThread = True
 enableScreenOff = True
 
+didScreenshot = True
+didVoice = True
+doOther = False
+
 if(doInThread):
     t = threading.Thread(target = frameCapture, args = ())
     t.daemon = True
@@ -393,24 +427,36 @@ if(doInThread):
 
     if (not enableScreenOff):
         while(True):
-            if (headIsAtLocation("right")):
-                    test_pyautogui.rightTab(headIsAtLocation, ('right',))
-            if (headIsAtLocation("left")):
-                    test_pyautogui.leftTab(headIsAtLocation, ('left',))
-            if (headIsAtLocation("midtop")):
-                    #print("midtop")
-                    test_pyautogui.scroll(3, 0, headIsAtLocation, ('midtop',))
-            if (headIsAtLocation("top")):
-                    #print("top")
-                    test_pyautogui.scroll(3, 4, headIsAtLocation, ('top',))
-            if (headIsAtLocation("midbottom")):
-                    #print("midtop")
-                    test_pyautogui.scroll(-3, 0, headIsAtLocation, ('midbottom',))
-            if (headIsAtLocation("bottom")):
-                    #print("top")
-                    test_pyautogui.scroll(-3, -4, headIsAtLocation, ('bottom',))
-            if (abs(eye1Dif[0]) + abs(eye1Dif[1]) + abs(eye1Dif[2]) > 20):
+            #print (sum(eye1Dif))
+            if doOther:
+                if (headIsAtLocation("right")):
+                        test_pyautogui.rightTab(headIsAtLocation, ('right',))
+                if (headIsAtLocation("left")):
+                        test_pyautogui.leftTab(headIsAtLocation, ('left',))
+                if (headIsAtLocation("midtop")):
+                        #print("midtop")
+                        test_pyautogui.scroll(3, 0, headIsAtLocation, ('midtop',))
+                if (headIsAtLocation("top")):
+                        #print("top")
+                        test_pyautogui.scroll(3, 7, headIsAtLocation, ('top',))
+                if (headIsAtLocation("midbottom")):
+                        #print("midtop")
+                        test_pyautogui.scroll(-3, 0, headIsAtLocation, ('midbottom',))
+                if (headIsAtLocation("bottom")):
+                        #print("top")
+                        test_pyautogui.scroll(-3, -7, headIsAtLocation, ('bottom',))
+                        
+            if ((abs(eye1Dif[0]) + abs(eye1Dif[1]) + abs(eye1Dif[2])) > 10 and (captureCount > constantMinus + 4) and not didScreenshot):
+ #               print( "screenshot taken")
                     test_pyautogui.screenshot('screen.png')
+                    didScreenshot = True
+
+            if ((abs(eye2Dif[0]) + abs(eye2Dif[1]) + abs(eye2Dif[2])) > 10 and (captureCount > constantMinus + 4) and not didVoice):
+                    test_pyautogui.typing(speech.listen())
+                    didVoice = True
+ #               print( "screenshot taken")
+ #                   test_pyautogui.screenshot('screen.png')
+#                    didScreenshot = True
     else:
         while(True):
             if (not didJustScreenOff and faces != None and len(faces) == 0):
