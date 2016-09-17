@@ -41,7 +41,7 @@ def headLocation( facex, facey):
 anterior = 0
 
 captureCount = 0
-constantMinus = 5
+constantMinus = 10
 totalx = 0
 totaly = 0
 totalw = 0
@@ -59,6 +59,7 @@ eyesy = 0
 eyesw = 0
 eyesh = 0
 frame = None
+faces = None
 didJustScreenOff = False
 
 def headIsAtLocation(string):
@@ -101,10 +102,13 @@ def frameCapture():
     global eyesw
     global eyesh
     global didJustScreenOff
+    global faces
+    global frame
     
     faceCascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
     eyeCascade = cv2.CascadeClassifier('haarcascade_eye.xml')
     eyesCascade = cv2.CascadeClassifier('haarcascade_eyes.xml')
+    mouthCascade = cv2.CascadeClassifier('haarcascade_mouth.xml')
     #cascPath = sys.argv[1]
     #faceCascade.load('haarcascade_frontalface_default.xml')
     #faceCascade = cv2.CascadeClassifier(cascPath)
@@ -112,7 +116,6 @@ def frameCapture():
     video_capture = cv2.VideoCapture(0)
     while True:
         # Capture frame-by-frame
-        global frame
         ret, frame = video_capture.read()
 
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -128,20 +131,8 @@ def frameCapture():
         faceh = 0
         facew = 0
 
-        if (not didJustScreenOff and len(faces) == 0):
-            test_pyautogui.screenOff()
-            didJustScreenOff = True
-        elif (didJustScreenOff and len(faces) != 0):
-            test_pyautogui.screenOn()
-            didJustScreenOff = False
-            captureCount = 0
-            avgx = 0
-            avgy = 0
-            avgh = 0
-            avgw = 0
-        
-
         for (x, y, w, h) in faces:
+            print(w * h)
             if (w * h > faceh * facew):
                 facex = x
                 facey = y
@@ -186,6 +177,14 @@ def frameCapture():
         #cv2.rectangle(eyes_color,(eyesx + (eyesw // 8),eyesy),(eyesx+(eyesw // 4)+(eyesw // 8),eyesy+eyesh),(0,255,0),2)
         #cv2.rectangle(eyes_color,(eyesx + ((3 *eyesw) // 4) - (eyesw // 8),eyesy),(eyesx+eyesw - (eyesw // 8), eyesy+eyesh),(0,255,0),2)
 
+        # MOUTH detection
+
+        mouth_gray = gray[facey: facey + faceh, facex: facex + facew]
+        mouth_color = frame[facey: facey + faceh, facex: facex + facew]
+        mouth = mouthCascade.detectMultiScale(mouth_gray)
+
+        
+
         
         '''
         # EYE DETECTION
@@ -203,6 +202,7 @@ def frameCapture():
         
         captureCount += 1
         if (captureCount > constantMinus and captureCount <= constantMinus + 4):
+            print("calibrating")
             totalx += facex
             totaly += facey
             avgx = roundHalfUp(totalx / (captureCount - constantMinus))
@@ -234,6 +234,7 @@ def frameCapture():
             cv2.rectangle(frame, (facex, facey), (facex+facew, facey+faceh), (0, 255, 0), 2)
         else:
             cv2.rectangle(frame, (facex, facey), (facex+facew, facey+faceh), (255, 255, 255), 2)
+
         
         if anterior != len(faces):
             anterior = len(faces)
@@ -249,7 +250,8 @@ def frameCapture():
     video_capture.release()
     cv2.destroyAllWindows()
 
-doInThread = True
+doInThread = False
+enableScreenOff = True
 
 if(doInThread):
     t = threading.Thread(target = frameCapture, args = ())
@@ -259,23 +261,38 @@ if(doInThread):
 
     #time.sleep(3)
 
-    while(True):
-        if (headIsAtLocation("right")):
-                test_pyautogui.rightTab(headIsAtLocation, ('right',))
-        if (headIsAtLocation("left")):
-                test_pyautogui.leftTab(headIsAtLocation, ('left',))
-        if (headIsAtLocation("midtop")):
-                #print("midtop")
-                test_pyautogui.scroll(3, 0, headIsAtLocation, ('midtop',))
-        if (headIsAtLocation("top")):
-                #print("top")
-                test_pyautogui.scroll(3, 4, headIsAtLocation, ('top',))
-        if (headIsAtLocation("midbottom")):
-                #print("midtop")
-                test_pyautogui.scroll(-3, 0, headIsAtLocation, ('midbottom',))
-        if (headIsAtLocation("bottom")):
-                #print("top")
-                test_pyautogui.scroll(-3, -4, headIsAtLocation, ('bottom',))
+    if (not enableScreenOff):
+        while(True):
+            if (headIsAtLocation("right")):
+                    test_pyautogui.rightTab(headIsAtLocation, ('right',))
+            if (headIsAtLocation("left")):
+                    test_pyautogui.leftTab(headIsAtLocation, ('left',))
+            if (headIsAtLocation("midtop")):
+                    #print("midtop")
+                    test_pyautogui.scroll(3, 0, headIsAtLocation, ('midtop',))
+            if (headIsAtLocation("top")):
+                    #print("top")
+                    test_pyautogui.scroll(3, 4, headIsAtLocation, ('top',))
+            if (headIsAtLocation("midbottom")):
+                    #print("midtop")
+                    test_pyautogui.scroll(-3, 0, headIsAtLocation, ('midbottom',))
+            if (headIsAtLocation("bottom")):
+                    #print("top")
+                    test_pyautogui.scroll(-3, -4, headIsAtLocation, ('bottom',))
+    else:
+        while(True):
+            if (not didJustScreenOff and faces != None and len(faces) == 0):
+                test_pyautogui.screenOff()
+                time.sleep(1)
+                didJustScreenOff = True
+            elif (didJustScreenOff and faces != None and len(faces) != 0):
+                test_pyautogui.screenOn()
+                didJustScreenOff = False
+                captureCount = 0
+                avgx = 0
+                avgy = 0
+                avgh = 0
+                avgw = 0
 else:
     #speech.listen()
     frameCapture()
