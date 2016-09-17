@@ -68,6 +68,7 @@ def rightTab(checkFunction):
 
 def screenshot(fileName):
     pyautogui.screenshot(fileName)
+    os.system("say 'screenshot taken'") 
     im = Image.open(fileName)
     im.show()
     
@@ -90,7 +91,8 @@ def zoomOut():
 
 def typing(s):
     pyautogui.typewrite(s,interval=0.1)
-    
+
+screenshot("test.png")
 
 
 #_thread.start_new_thread(test, ())
