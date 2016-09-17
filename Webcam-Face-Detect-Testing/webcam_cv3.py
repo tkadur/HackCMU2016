@@ -62,7 +62,7 @@ while True:
     print(y)
     '''
     captureCount += 1
-    if (captureCount >= constantMinus and captureCount < constantMinus + 3):
+    if (captureCount > constantMinus and captureCount <= constantMinus + 4):
         totalx += facex
         totaly += facey
         avgx = roundHalfUp(totalx / (captureCount - constantMinus))
