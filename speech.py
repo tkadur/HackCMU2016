@@ -32,7 +32,7 @@ def listen():
                 result = ""
         return result
 
-print(listen())
+#print(listen())
 
 '''
 # recognize speech using Sphinx
