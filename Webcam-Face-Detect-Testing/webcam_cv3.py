@@ -28,12 +28,12 @@ def keepGoing(position):
     
 
 def headLocation( facex, facey):
-    if (facex - avgx > 35): return "left"
-    elif (facex - avgx < -35): return "right"
+    if (facex - avgx > 45): return "left"
+    elif (facex - avgx < -45): return "right"
     elif (facey - avgy > 35): return "bottom"
     elif (facey - avgy > 15): return "midbottom"
     elif (facey - avgy < -30): return "top"
-    elif (facey - avgy < -10): return "midtop"
+    elif (facey - avgy < -15): return "midtop"
     else: return "neutral"
     
 
@@ -54,6 +54,10 @@ facex = 0
 facey = 0
 facew = 0
 faceh = 0
+eyesx = 0
+eyesy = 0
+eyesw = 0
+eyesh = 0
 frame = None
 
 def headIsAtLocation(string):
@@ -91,9 +95,14 @@ def frameCapture():
     global facey
     global facew
     global faceh
+    global eyesx
+    global eyesy
+    global eyesw
+    global eyesh
     
     faceCascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-    eyeCascade = cv2.CascadeClassifier('haarcascade_mouth.xml')
+    eyeCascade = cv2.CascadeClassifier('haarcascade_eye.xml')
+    eyesCascade = cv2.CascadeClassifier('haarcascade_eyes.xml')
     #cascPath = sys.argv[1]
     #faceCascade.load('haarcascade_frontalface_default.xml')
     #faceCascade = cv2.CascadeClassifier(cascPath)
@@ -114,13 +123,11 @@ def frameCapture():
             # flags=cv2.cv.CV_HAAR_SCALE_IMAGE
         )
 
-        
+        faceh = 0
+        facew = 0
 
-        # Draw a rectangle around the faces
-
-        
         for (x, y, w, h) in faces:
-            if (w * h > faceh * facey):
+            if (w * h > faceh * facew):
                 facex = x
                 facey = y
                 facew = w
@@ -131,23 +138,54 @@ def frameCapture():
 
         if (faceh == 0):
             faceh = 1
-                
-        roi_gray = gray[facey:facey+faceh, facex:facex+facew]
-        roi_color = frame[facey:facey+faceh, facex:facex+facew]
-        #print(roi_gray)
-        eyes = eyeCascade.detectMultiScale(roi_gray)
-        for (ex,ey,ew,eh) in eyes:
-            # Check eye validity
-            centerx = ex + int(ew * 0.5)
-            centery = ey + int(eh * 0.5)
-            cond1 = (centerx > facex and centerx < facex + facew) and (centery > facey and centery < facey + faceh)
-            '''
-            print(centerx)
-            print
-            print(facex)
-            '''
+        
+        # EYES detection
+        eyes_gray = gray[facey:facey+faceh, facex:facex+facew]
+        eyes_color = frame[facey:facey+faceh, facex:facex+facew]
+        eyes = eyesCascade.detectMultiScale(eyes_gray)
+
+        for(x, y, w, h) in eyes:
+            if (w > h and w * h > eyesh * eyesw):
+            #if (w > eyesw):
+                eyesx = x
+                eyesy = y
+                eyesh = h
+                eyesw = w
+            #cv2.rectangle(eyes_color,(eyesx,eyesy),(eyesx+eyesw,eyesy+eyesh),(0,255,0),2)
+
+        if (eyesw == 0):
+            eyesw = 1
+
+        if (eyesh == 0):
+            eyesh = 1
+
+        newEyes = [[eyesx + int(eyesw / 8.5), eyesy + int(eyesh / 2.85), (eyesw // 4),int(eyesh /2.85)],
+                   [eyesx + int((3 *eyesw) / 4) - (eyesw // 8),eyesy + int(eyesh / 2.85), (eyesw // 4), int(eyesh/2.85)]]
+
+        #newEyes = [[eyesx, eyesy + int(faceh / 7), int(facew / 5), int(faceh / 10)],
+#                   [eyesx + int((3 * facew) / 5), eyesy + int(faceh / 7), int(facew / 5), int(faceh / 10)]]
+
+        for (x, y, w, h) in newEyes:
+            cv2.rectangle(eyes_color, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        
+        #cv2.rectangle(eyes_color,(eyesx + (eyesw // 8),eyesy),(eyesx+(eyesw // 4)+(eyesw // 8),eyesy+eyesh),(0,255,0),2)
+        #cv2.rectangle(eyes_color,(eyesx + ((3 *eyesw) // 4) - (eyesw // 8),eyesy),(eyesx+eyesw - (eyesw // 8), eyesy+eyesh),(0,255,0),2)
+
+        
+        '''
+        # EYE DETECTION
+        toleranceM = 1.25
+        toleranceA = 10
+        roi_gray = gray[eyesy:eyesy+eyesh, eyesx:eyesx+eyesw]
+        roi_color = frame[eyesy:eyesy+eyesh, eyesx:eyesx+eyesw]
+        eye = eyeCascade.detectMultiScale(roi_gray)
+        for (ex,ey,ew,eh) in eye:
             cv2.rectangle(roi_color,(ex,ey),(ex+ew,ey+eh),(0,255,0),2)
-            
+        '''
+        
+
+        
+        
         captureCount += 1
         if (captureCount > constantMinus and captureCount <= constantMinus + 4):
             totalx += facex
@@ -163,12 +201,12 @@ def frameCapture():
         print(avgx)
         """
 
-        cv2.rectangle(frame, (avgx, avgy), (avgx+avgw, avgy+avgh), (0, 0, 0), 2)
+        #cv2.rectangle(frame, (avgx, avgy), (avgx+avgw, avgy+avgh), (0, 0, 0), 2)
 
         
         if (headIsAtLocation("right")):
             #test_pyautogui.rightTab(headIsAtLocation, ('right',))
-            cv2.rectangle(frame, (facex, facey), (facex+facew, facey+faceh), (225, 0, 255), 2)
+            cv2.rectangle(frame, (facex, facey), (facex+facew, facey+faceh), (255, 0, 255), 2)
         elif (headIsAtLocation("left")):
             cv2.rectangle(frame, (facex, facey), (facex+facew, facey+faceh), (0, 0, 0), 2)
         elif (headIsAtLocation("top")):
@@ -196,7 +234,7 @@ def frameCapture():
     video_capture.release()
     cv2.destroyAllWindows()
 
-doInThread = False
+doInThread = True
 
 if(doInThread):
     t = threading.Thread(target = frameCapture, args = ())
@@ -204,9 +242,7 @@ if(doInThread):
     t.start()
     #t.join()
 
-    time.sleep(3)
-    #   t   est_pyautogui.scroll(10, 0, lambda : True)
-    #pyautogui.scroll(10)
+    #time.sleep(3)
 
     while(True):
         if (headIsAtLocation("right")):
@@ -215,17 +251,18 @@ if(doInThread):
                 test_pyautogui.leftTab(headIsAtLocation, ('left',))
         if (headIsAtLocation("midtop")):
                 #print("midtop")
-                test_pyautogui.scroll(2, 0, headIsAtLocation, ('midtop',))
+                test_pyautogui.scroll(3, 0, headIsAtLocation, ('midtop',))
         if (headIsAtLocation("top")):
                 #print("top")
-                test_pyautogui.scroll(2, 1, headIsAtLocation, ('top',))
+                test_pyautogui.scroll(3, 4, headIsAtLocation, ('top',))
         if (headIsAtLocation("midbottom")):
                 #print("midtop")
-                test_pyautogui.scroll(-2, 0, headIsAtLocation, ('midbottom',))
+                test_pyautogui.scroll(-3, 0, headIsAtLocation, ('midbottom',))
         if (headIsAtLocation("bottom")):
                 #print("top")
-                test_pyautogui.scroll(-2, -1, headIsAtLocation, ('bottom',))
+                test_pyautogui.scroll(-3, -4, headIsAtLocation, ('bottom',))
 else:
+    #speech.listen()
     frameCapture()
 
 print(avgx)
